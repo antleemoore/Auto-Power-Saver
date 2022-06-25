@@ -63,7 +63,6 @@ with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
 
 disable_notifications = True if config.get('main', 'disable_notifications') == "True" else False
 
-
 image = PIL.Image.open(resource_path("green_power.jpeg"))
 
 class LASTINPUTINFO(Structure):
@@ -185,25 +184,23 @@ set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
     pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
-    pystray.MenuItem("Settings", pystray.Menu(
-        pystray.MenuItem("Edit power plan settings", on_clicked),
-        pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
-        pystray.MenuItem("Create power plan", pystray.Menu(
-            pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
-            pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
-            )),
-        pystray.MenuItem("Change timeout", pystray.Menu(
-            pystray.MenuItem("1 minute", on_change_timer, radio=True, checked=lambda item: enabled == 1),
-            pystray.MenuItem("2 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 2),
-            pystray.MenuItem("3 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 3),
-            pystray.MenuItem("5 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 5),
-            pystray.MenuItem("10 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 10),
-            pystray.MenuItem("15 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 15),
-            pystray.MenuItem("30 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 30),
-            pystray.MenuItem("60 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 60),
-            pystray.MenuItem("120 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 120)
-        )) 
-    )),
+    pystray.MenuItem("Create power plan", pystray.Menu(
+        pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
+        pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
+        )),
+    pystray.MenuItem("Edit power plan settings", on_clicked),
+    pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
+    pystray.MenuItem("Change timeout", pystray.Menu(
+        pystray.MenuItem("1 minute", on_change_timer, radio=True, checked=lambda item: enabled == 1),
+        pystray.MenuItem("2 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 2),
+        pystray.MenuItem("3 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 3),
+        pystray.MenuItem("5 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 5),
+        pystray.MenuItem("10 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 10),
+        pystray.MenuItem("15 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 15),
+        pystray.MenuItem("30 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 30),
+        pystray.MenuItem("60 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 60),
+        pystray.MenuItem("120 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 120)
+    )), 
     pystray.MenuItem("Exit", on_clicked)  
 ))
 icon.run_detached()

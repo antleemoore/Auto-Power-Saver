@@ -1,0 +1,1 @@
+powercfg /import "%cd%\power_saver.pow"
