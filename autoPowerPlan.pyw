@@ -9,6 +9,39 @@ import PIL.Image
 from notifypy import Notify
 from configparser import ConfigParser
 from os.path import expanduser
+import urllib.request
+import requests
+import re
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+def send_notification(msg):
+    if disable_notifications == True:
+        return
+    notification = Notify()
+    notification.title = f"Auto Power Saver"
+    notification.message = msg
+    notification.icon = resource_path("green_power.jpeg")
+    notification.send()   
+update = False
+webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
+data = webUrl.read()
+version_file = open(f"{resource_path('version')}", "r")
+version = version_file.read()
+if float(str(data)[2:-1]) > float(version):
+    update = True
+    notification = Notify()
+    notification.title = f"Auto Power Saver"
+    notification.message = "Update is available.  Right-click to update now."
+    notification.icon = resource_path("green_power.jpeg")
+    notification.send()   
+
 home = expanduser("~")
 running = True
 quit = False
@@ -30,15 +63,6 @@ with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
 
 disable_notifications = True if config.get('main', 'disable_notifications') == "True" else False
 
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    try:
-        # PyInstaller creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-
-    return os.path.join(base_path, relative_path)
 
 image = PIL.Image.open(resource_path("green_power.jpeg"))
 
@@ -66,20 +90,40 @@ def get_plans():
 plans = get_plans()
 def set_plan(name):
     try:
-        str(subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe powercfg /setactive {plans[name]}",shell=True))
+        subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe powercfg /setactive {plans[name]}",shell=True)
         send_notification(f"The power plan was switched to {name}")
     except:
         send_notification(f"You are missing the {name} power plan.  Create it in settings.")
         return False
     return True
-def send_notification(msg):
-    if disable_notifications == True:
-        return
-    notification = Notify()
-    notification.title = f"Auto Power Saver"
-    notification.message = msg
-    notification.icon = resource_path("green_power.jpeg")
-    notification.send()   
+def download(url: str, dest_folder: str):
+    if not os.path.exists(dest_folder):
+        os.makedirs(dest_folder)  # create folder if it does not exist
+
+    filename = url.split('/')[-1].replace(" ", "_")  # be careful with file names
+    file_path = os.path.join(dest_folder, filename)
+
+    r = requests.get(url, stream=True)
+    if r.ok:
+        print("saving to", os.path.abspath(file_path))
+        with open(file_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024 * 8):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+                    os.fsync(f.fileno())
+    else:  # HTTP status code 4XX/5XX
+        print("Download failed: status code {}\n{}".format(r.status_code, r.text))
+def on_check_updates(icon, item):
+    global quit
+    url = 'https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/update'
+    webUrl  = urllib.request.urlopen(url)
+    update_data = webUrl.read()
+    update_exe = re.findall('http.*exe', str(update_data))
+    print(str(update_exe[0]))
+    download(str(update_exe[0]), f'{home}\Downloads')
+    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {home}\Downloads\\autopowersaver_setup.exe",shell=True)
+    quit = True
 def on_clicked(icon, item):
     global running, activeplan, quit, disable_notifications
     if str(item) == "Exit":
@@ -140,6 +184,7 @@ activeplan = "High performance"
 set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
+    pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
     pystray.MenuItem("Settings", pystray.Menu(
         pystray.MenuItem("Edit power plan settings", on_clicked),
         pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
