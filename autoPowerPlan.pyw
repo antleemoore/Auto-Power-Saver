@@ -34,7 +34,7 @@ webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/
 data = webUrl.read()
 version_file = open(f"{resource_path('version')}", "r")
 version = version_file.read()
-if float(str(data)[2:-1]) > float(version):
+if float(str(data)[2:-3]) > float(version):
     update = True
     notification = Notify()
     notification.title = f"Auto Power Saver"
