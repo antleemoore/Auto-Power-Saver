@@ -210,7 +210,7 @@ activeplan = "High performance" if status.ACLineStatus == 1 else "Power saver"
 set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
-    pystray.MenuItem(f"Version: {float(app_version)}", on_check_updates, enabled = lambda item : update == True),
+    pystray.MenuItem(f"Version: {float(app_version)}", on_check_updates, enabled = False),
     pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
 
     pystray.MenuItem("Create power plan", pystray.Menu(
