@@ -53,14 +53,16 @@ def send_notification(msg):
     notification.send()   
 update = False
 app_version = 0
+update_version = 0
 def check_for_updates():
-    global update, app_version
+    global update, app_version, update_version
     webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
     data = webUrl.read()
     version_file = open(f"{resource_path('version')}", "r")
     version = version_file.read()
     app_version = float(version)
-    if float(str(data)[2:-3]) > app_version:
+    update_version = float(str(data)[2:-3])
+    if update_version > app_version:
         update = True
         notification = Notify()
         notification.title = f"Auto Power Saver"
@@ -148,7 +150,7 @@ def on_check_updates(icon, item):
     update_exe = re.findall('http.*exe', str(update_data))
     print(str(update_exe[0]))
     download(str(update_exe[0]), f'{home}\Downloads')
-    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {home}\Downloads\\autopowersaver_setup__v{app_version}.exe",shell=True)
+    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {home}\Downloads\\autopowersaver_setup__v{update_version}.exe",shell=True)
     quit = True
 def on_clicked(icon, item):
     global running, activeplan, quit, disable_notifications
