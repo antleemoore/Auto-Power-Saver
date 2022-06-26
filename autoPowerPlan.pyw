@@ -141,14 +141,14 @@ def download(url: str, dest_folder: str):
     else:  # HTTP status code 4XX/5XX
         print("Download failed: status code {}\n{}".format(r.status_code, r.text))
 def on_check_updates(icon, item):
-    global quit
+    global quit, app_version
     url = 'https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/update'
     webUrl  = urllib.request.urlopen(url)
     update_data = webUrl.read()
     update_exe = re.findall('http.*exe', str(update_data))
     print(str(update_exe[0]))
     download(str(update_exe[0]), f'{home}\Downloads')
-    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {home}\Downloads\\autopowersaver_setup.exe",shell=True)
+    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {home}\Downloads\\autopowersaver_setup__v{app_version}.exe",shell=True)
     quit = True
 def on_clicked(icon, item):
     global running, activeplan, quit, disable_notifications
