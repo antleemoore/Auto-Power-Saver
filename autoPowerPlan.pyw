@@ -64,7 +64,7 @@ def check_for_updates():
         update = True
         notification = Notify()
         notification.title = f"Auto Power Saver"
-        notification.message = "Update is available.  Right-click to update now."
+        notification.message = "Update is available.  Right-click on the system ray icon to update now."
         notification.icon = resource_path("green_power.jpeg")
         notification.send()
 check_for_updates()   
