@@ -1,4 +1,5 @@
-from ctypes import Structure, windll, c_uint, sizeof, byref
+import ctypes
+from ctypes import Structure, windll, c_uint, sizeof, byref, wintypes
 import subprocess
 import re
 import sys
@@ -12,6 +13,26 @@ from os.path import expanduser
 import urllib.request
 import requests
 from datetime import datetime as dt
+
+class SYSTEM_POWER_STATUS(ctypes.Structure):
+    _fields_ = [
+        ('ACLineStatus', wintypes.BYTE),
+        ('BatteryFlag', wintypes.BYTE),
+        ('BatteryLifePercent', wintypes.BYTE),
+        ('Reserved1', wintypes.BYTE),
+        ('BatteryLifeTime', wintypes.DWORD),
+        ('BatteryFullLifeTime', wintypes.DWORD),
+    ]
+
+SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
+
+GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
+GetSystemPowerStatus.argtypes = [SYSTEM_POWER_STATUS_P]
+GetSystemPowerStatus.restype = wintypes.BOOL
+
+status = SYSTEM_POWER_STATUS()
+if not GetSystemPowerStatus(ctypes.pointer(status)):
+    raise ctypes.WinError()
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -185,7 +206,7 @@ def on_change_timer(icon, item):
         config.write(f)
     send_notification(f"The timeout length was changed to {int(timer / 60)} minutes.")
 
-activeplan = "High performance"
+activeplan = "High performance" if status.ACLineStatus == 1 else "Power saver"
 set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
@@ -222,7 +243,7 @@ while True:
             icon.update_menu()
         new_plan = activeplan
         if get_idle_duration() <= timer: 
-            new_plan = "High performance"
+            new_plan = "High performance" if status.ACLineStatus == 1 else "Power saver"
         else:
             new_plan = "Power saver"
         
