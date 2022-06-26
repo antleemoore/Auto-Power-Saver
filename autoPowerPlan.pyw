@@ -11,7 +11,8 @@ from configparser import ConfigParser
 from os.path import expanduser
 import urllib.request
 import requests
-import re
+from datetime import datetime as dt
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -30,17 +31,22 @@ def send_notification(msg):
     notification.icon = resource_path("green_power.jpeg")
     notification.send()   
 update = False
-webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
-data = webUrl.read()
-version_file = open(f"{resource_path('version')}", "r")
-version = version_file.read()
-if float(str(data)[2:-3]) > float(version):
-    update = True
-    notification = Notify()
-    notification.title = f"Auto Power Saver"
-    notification.message = "Update is available.  Right-click to update now."
-    notification.icon = resource_path("green_power.jpeg")
-    notification.send()   
+app_version = 0
+def check_for_updates():
+    global update, app_version
+    webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
+    data = webUrl.read()
+    version_file = open(f"{resource_path('version')}", "r")
+    version = version_file.read()
+    app_version = float(version)
+    if float(str(data)[2:-3]) > app_version:
+        update = True
+        notification = Notify()
+        notification.title = f"Auto Power Saver"
+        notification.message = "Update is available.  Right-click to update now."
+        notification.icon = resource_path("green_power.jpeg")
+        notification.send()
+check_for_updates()   
 
 home = expanduser("~")
 running = True
@@ -183,7 +189,9 @@ activeplan = "High performance"
 set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
+    pystray.MenuItem(f"Version: {float(app_version)}", on_check_updates, enabled = lambda item : update == True),
     pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
+
     pystray.MenuItem("Create power plan", pystray.Menu(
         pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
         pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
@@ -209,6 +217,9 @@ while True:
     if quit:
         sys.exit()
     if running:
+        if dt.now().minute % 15 == 0 and dt.now().second == 0:
+            check_for_updates()
+            icon.update_menu()
         new_plan = activeplan
         if get_idle_duration() <= timer: 
             new_plan = "High performance"
