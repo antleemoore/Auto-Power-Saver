@@ -4,3 +4,4 @@ check_update.py
 config.ini
 pyinstaller_script.bat
 autopowersaverinstaller.ifp
+pyinstaller_config.json

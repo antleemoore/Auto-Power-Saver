@@ -13,7 +13,7 @@ from os.path import expanduser
 import urllib.request
 import requests
 from datetime import datetime as dt
-
+import semver
 class SYSTEM_POWER_STATUS(ctypes.Structure):
     _fields_ = [
         ('ACLineStatus', wintypes.BYTE),
@@ -60,15 +60,18 @@ def check_for_updates():
     data = webUrl.read()
     version_file = open(f"{resource_path('version')}", "r")
     version = version_file.read()
-    app_version = float(version)
-    update_version = float(str(data)[2:-3])
-    if update_version > app_version:
+    app_version =  re.search(r'([\d.]+)', str(version)).group(1)
+    update_version = re.search(r'\s*([\d.]+)', str(data)).group(1)
+    
+    if semver.compare(update_version, app_version) == 1:
         update = True
         notification = Notify()
         notification.title = f"Auto Power Saver"
         notification.message = "Update is available.  Right-click on the system ray icon to update now."
         notification.icon = resource_path("green_power.jpeg")
         notification.send()
+    else:
+        print('Software is currently up to date.')
 check_for_updates()   
 
 home = expanduser("~")
@@ -212,7 +215,7 @@ activeplan = "High performance" if status.ACLineStatus == 1 else "Power saver"
 set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
-    pystray.MenuItem(f"Version: {float(app_version)}", on_check_updates, enabled = False),
+    pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled = False),
     pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
 
     pystray.MenuItem("Create power plan", pystray.Menu(
