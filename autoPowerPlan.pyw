@@ -89,6 +89,16 @@ def on_check_updates(icon, item):
     download(str(update_exe[0]), f'{TEMP_FOLDER}')
     subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe",shell=True)
     quit = True
+def on_reinstall(icon, item):
+    global plans
+    if str(item) == "High performance":
+        subprocess.call(f'powercfg /delete {plans.get("High performance")}', shell=True)
+        send_notification("High performance power plan has been deleted.")
+    elif str(item) == "Power saver":
+        subprocess.call(f'powercfg /delete {plans.get("Power saver")}', shell=True)   
+        send_notification("Power saver power plan has been deleted.")
+    plans = get_plans()
+    icon.update_menu()
 home = expanduser("~")
 config = ConfigParser()
 config.read(f'{home}\Documents\\auto_power_saver_config.ini')
@@ -178,7 +188,7 @@ def set_plan(name):
 
 
 def on_clicked(icon, item):
-    global running, activeplan, quit, disable_notifications,update_status
+    global running, activeplan, quit, disable_notifications,update_status, plans
     if str(item) == "Exit":
         running = False
         icon.stop()
@@ -188,9 +198,11 @@ def on_clicked(icon, item):
     elif str(item) == "High performance":
         subprocess.call(f'{resource_path("get_high_performance_power_plan.bat")}', shell=True)
         send_notification("High performance power plan has been downloaded.")
+        plans = get_plans()
     elif str(item) == "Power saver":
         subprocess.call(f'{resource_path("get_power_saver_power_plan.bat")}', shell=True)   
         send_notification("Power saver power plan has been downloaded.")
+        plans = get_plans()
     elif str(item) == "Disable notifications":
         disable_notifications = True if disable_notifications == False else False
         config.set('main', 'disable_notifications', f'{"True" if disable_notifications == True else "False"}')
@@ -248,10 +260,13 @@ set_plan(activeplan)
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
     pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled = False),
     pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
-
     pystray.MenuItem("Create power plan", pystray.Menu(
         pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
         pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
+        )),
+    pystray.MenuItem("Delete power plan", pystray.Menu(
+        pystray.MenuItem("High performance", on_reinstall),
+        pystray.MenuItem("Power saver", on_reinstall),
         )),
     pystray.MenuItem("Edit power plan settings", on_clicked),
     pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
@@ -279,12 +294,13 @@ while True:
     if quit:
         sys.exit()
     if running:
+        status = SYSTEM_POWER_STATUS()
         if dt.now().minute % 15 == 0 and dt.now().second == 0:
             check_for_updates()
             icon.update_menu()
         new_plan = activeplan
-        if get_idle_duration() <= timer: 
-            new_plan = "High performance" if status.ACLineStatus == 1 else "Power saver"
+        if get_idle_duration() <= timer and status.ACLineStatus == 1: 
+            new_plan = "High performance"
         else:
             new_plan = "Power saver"
         
