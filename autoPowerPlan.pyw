@@ -89,6 +89,24 @@ def on_check_updates(icon, item):
     download(str(update_exe[0]), f'{TEMP_FOLDER}')
     subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe",shell=True)
     quit = True
+home = expanduser("~")
+config = ConfigParser()
+config.read(f'{home}\Documents\\auto_power_saver_config.ini')
+try:
+    config.get('main', 'timeout')
+    config.get('main', 'disable_notifications')
+    config.get('main', 'update_frequency')
+except:
+    if not config.has_section('main'):
+        config.add_section('main')
+    config.set('main', 'timeout', '3') 
+    config.set('main', 'disable_notifications', 'False')
+    config.set('main', 'update_frequency', '3')
+timer = 60 * int(config.get('main', 'timeout'))
+update_status = int(config.get('main', 'update_frequency'))
+enabled = timer / 60
+with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
+    config.write(f)
 def check_for_updates():
     global update, app_version, update_version
     webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
@@ -97,9 +115,15 @@ def check_for_updates():
     version = version_file.read()
     app_version =  re.search(r'([\d.]+)', str(version)).group(1)
     update_version = re.search(r'\s*([\d.]+)', str(data)).group(1)
-    
+    current_major, current_minor, current_bug = map(int, app_version.split('.'))
+    new_major, new_minor, new_bug = map(int, update_version.split('.'))
     if semver.compare(update_version, app_version) == 1:
-        #root=Tk() 
+        if update_status == 1 and new_major <= current_major:
+            return
+        elif update_status == 2 and new_major >= current_major and new_minor <= current_minor:
+            return
+        else:
+            pass
         result=tkinter.messagebox.askquestion('Update',f'Version {update_version} is available.  Do you want to update now?')
         if result=='yes':
             on_check_updates(None, None)
@@ -109,23 +133,12 @@ def check_for_updates():
         print('Software is currently up to date.')
 check_for_updates()   
 
-home = expanduser("~")
 
 
-config = ConfigParser()
-config.read(f'{home}\Documents\\auto_power_saver_config.ini')
-try:
-    config.get('main', 'timeout')
-    config.get('main', 'disable_notifications')
-except:
-    if not config.has_section('main'):
-        config.add_section('main')
-    config.set('main', 'timeout', '3') 
-    config.set('main', 'disable_notifications', 'False')
-timer = 60 * int(config.get('main', 'timeout'))
-enabled = timer / 60
-with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
-    config.write(f)
+
+
+
+
 
 disable_notifications = True if config.get('main', 'disable_notifications') == "True" else False
 
@@ -165,7 +178,7 @@ def set_plan(name):
 
 
 def on_clicked(icon, item):
-    global running, activeplan, quit, disable_notifications
+    global running, activeplan, quit, disable_notifications,update_status
     if str(item) == "Exit":
         running = False
         icon.stop()
@@ -183,6 +196,15 @@ def on_clicked(icon, item):
         config.set('main', 'disable_notifications', f'{"True" if disable_notifications == True else "False"}')
         if disable_notifications == False:
             send_notification("Notifications have been enabled.")
+    elif str(item) == "Major releases":
+        update_status = 1
+        config.set('main', 'update_frequency', str(update_status))
+    elif str(item) == "Minor releases":
+        update_status = 2
+        config.set('main', 'update_frequency', str(update_status))
+    elif str(item) == "Bug fixes":
+        update_status = 3
+        config.set('main', 'update_frequency', str(update_status))
     with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
         config.write(f)
     icon.update_menu()  
@@ -243,6 +265,11 @@ icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
         pystray.MenuItem("30 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 30),
         pystray.MenuItem("60 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 60),
         pystray.MenuItem("120 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 120)
+    )), 
+    pystray.MenuItem("Change update frequency", pystray.Menu(
+        pystray.MenuItem("Major releases", on_clicked, radio=True, checked=lambda item: update_status == 1),
+        pystray.MenuItem("Minor releases", on_clicked, radio=True, checked=lambda item: update_status == 2),
+        pystray.MenuItem("Bug fixes", on_clicked, radio=True, checked=lambda item: update_status == 3),
     )), 
     pystray.MenuItem("Exit", on_clicked)  
 ))
