@@ -15,6 +15,9 @@ import requests
 from datetime import datetime as dt
 import semver
 import tempfile
+from tkinter import * 
+import tkinter.messagebox 
+
 class SYSTEM_POWER_STATUS(ctypes.Structure):
     _fields_ = [
         ('ACLineStatus', wintypes.BYTE),
@@ -26,7 +29,7 @@ class SYSTEM_POWER_STATUS(ctypes.Structure):
     ]
 
 SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
-
+TEMP_FOLDER = tempfile.gettempdir()  
 GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
 GetSystemPowerStatus.argtypes = [SYSTEM_POWER_STATUS_P]
 GetSystemPowerStatus.restype = wintypes.BOOL
@@ -35,6 +38,8 @@ status = SYSTEM_POWER_STATUS()
 if not GetSystemPowerStatus(ctypes.pointer(status)):
     raise ctypes.WinError()
 
+running = True
+quit = False
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -55,6 +60,35 @@ def send_notification(msg):
 update = False
 app_version = 0
 update_version = 0
+def download(url: str, dest_folder: str):
+    if not os.path.exists(dest_folder):
+        os.makedirs(dest_folder)  # create folder if it does not exist
+
+    filename = url.split('/')[-1].replace(" ", "_")  # be careful with file names
+    file_path = os.path.join(dest_folder, filename)
+
+    r = requests.get(url, stream=True)
+    if r.ok:
+        print("saving to", os.path.abspath(file_path))
+        with open(file_path, 'wb') as f:
+            for chunk in r.iter_content(chunk_size=1024 * 8):
+                if chunk:
+                    f.write(chunk)
+                    f.flush()
+                    os.fsync(f.fileno())
+    else:  # HTTP status code 4XX/5XX
+        print("Download failed: status code {}\n{}".format(r.status_code, r.text))
+def on_check_updates(icon, item):
+    global quit, app_version
+    url = 'https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/update'
+    webUrl  = urllib.request.urlopen(url)
+    update_data = webUrl.read()
+    update_exe = re.findall('http.*exe', str(update_data))
+    print(str(update_exe[0]))
+
+    download(str(update_exe[0]), f'{TEMP_FOLDER}')
+    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe",shell=True)
+    quit = True
 def check_for_updates():
     global update, app_version, update_version
     webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
@@ -65,19 +99,18 @@ def check_for_updates():
     update_version = re.search(r'\s*([\d.]+)', str(data)).group(1)
     
     if semver.compare(update_version, app_version) == 1:
-        update = True
-        notification = Notify()
-        notification.title = f"Auto Power Saver"
-        notification.message = "Update is available.  Right-click on the system ray icon to update now."
-        notification.icon = resource_path("green_power.jpeg")
-        notification.send()
+        #root=Tk() 
+        result=tkinter.messagebox.askquestion('Update',f'Version {update_version} is available.  Do you want to update now?')
+        if result=='yes':
+            on_check_updates(None, None)
+        else:
+            pass
     else:
         print('Software is currently up to date.')
 check_for_updates()   
 
 home = expanduser("~")
-running = True
-quit = False
+
 
 config = ConfigParser()
 config.read(f'{home}\Documents\\auto_power_saver_config.ini')
@@ -128,38 +161,9 @@ def set_plan(name):
         send_notification(f"You are missing the {name} power plan.  Create it in settings.")
         return False
     return True
-def download(url: str, dest_folder: str):
-    if not os.path.exists(dest_folder):
-        os.makedirs(dest_folder)  # create folder if it does not exist
+     
 
-    filename = url.split('/')[-1].replace(" ", "_")  # be careful with file names
-    file_path = os.path.join(dest_folder, filename)
 
-    r = requests.get(url, stream=True)
-    if r.ok:
-        print("saving to", os.path.abspath(file_path))
-        with open(file_path, 'wb') as f:
-            for chunk in r.iter_content(chunk_size=1024 * 8):
-                if chunk:
-                    f.write(chunk)
-                    f.flush()
-                    os.fsync(f.fileno())
-    else:  # HTTP status code 4XX/5XX
-        print("Download failed: status code {}\n{}".format(r.status_code, r.text))
-        
-TEMP_FOLDER = tempfile.gettempdir()       
-
-def on_check_updates(icon, item):
-    global quit, app_version
-    url = 'https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/update'
-    webUrl  = urllib.request.urlopen(url)
-    update_data = webUrl.read()
-    update_exe = re.findall('http.*exe', str(update_data))
-    print(str(update_exe[0]))
-
-    download(str(update_exe[0]), f'{TEMP_FOLDER}')
-    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe",shell=True)
-    quit = True
 def on_clicked(icon, item):
     global running, activeplan, quit, disable_notifications
     if str(item) == "Exit":
