@@ -294,7 +294,13 @@ while True:
     if quit:
         sys.exit()
     if running:
+        SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
+        GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
+        GetSystemPowerStatus.argtypes = [SYSTEM_POWER_STATUS_P]
+        GetSystemPowerStatus.restype = wintypes.BOOL
         status = SYSTEM_POWER_STATUS()
+        if not GetSystemPowerStatus(ctypes.pointer(status)):
+            raise ctypes.WinError()
         if dt.now().minute % 15 == 0 and dt.now().second == 0:
             check_for_updates()
             icon.update_menu()
