@@ -38,6 +38,38 @@ status = SYSTEM_POWER_STATUS()
 if not GetSystemPowerStatus(ctypes.pointer(status)):
     raise ctypes.WinError()
 
+home = expanduser("~")
+config = ConfigParser()
+config.read(f'{home}\Documents\\auto_power_saver_config.ini')
+try:
+    config.get('main', 'timeout')
+    config.get('main', 'disable_notifications')
+    config.get('main', 'update_frequency')
+    config.get('main', 'automatic_updates')
+except:
+    if not config.has_section('main'):
+        config.add_section('main')
+    try:
+        config.get('main', 'timeout') 
+    except:
+        config.set('main', 'timeout', '3') 
+    try:
+        config.get('main', 'disable_notifications') 
+    except:
+        config.set('main', 'disable_notifications', 'False')
+    try:
+        config.get('main', 'update_frequency') 
+    except:
+        config.set('main', 'update_frequency', '3')
+    try: 
+        config.get('main', 'automatic_updates') 
+    except:
+        config.set('main', 'automatic_updates', 'False')
+timer = 60 * int(config.get('main', 'timeout'))
+update_status = int(config.get('main', 'update_frequency'))
+automatic_updates = True if config.get('main', 'automatic_updates') == "True" else False
+disable_notifications = True if config.get('main', 'disable_notifications') == "True" else False
+
 running = True
 quit = False
 def resource_path(relative_path):
@@ -99,21 +131,7 @@ def on_reinstall(icon, item):
         send_notification("Power saver power plan has been deleted.")
     plans = get_plans()
     icon.update_menu()
-home = expanduser("~")
-config = ConfigParser()
-config.read(f'{home}\Documents\\auto_power_saver_config.ini')
-try:
-    config.get('main', 'timeout')
-    config.get('main', 'disable_notifications')
-    config.get('main', 'update_frequency')
-except:
-    if not config.has_section('main'):
-        config.add_section('main')
-    config.set('main', 'timeout', '3') 
-    config.set('main', 'disable_notifications', 'False')
-    config.set('main', 'update_frequency', '3')
-timer = 60 * int(config.get('main', 'timeout'))
-update_status = int(config.get('main', 'update_frequency'))
+
 enabled = timer / 60
 with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
     config.write(f)
@@ -134,23 +152,17 @@ def check_for_updates():
             return
         else:
             pass
-        result=tkinter.messagebox.askquestion('Update',f'Version {update_version} is available.  Do you want to update now?\nThe update will be handled in the background.')
-        if result=='yes':
+        if automatic_updates == True:
+            send_notification(f"Auto Power Saver is now updating to version {update_version}.")
             on_check_updates(None, None)
         else:
-            pass
+            result=tkinter.messagebox.askquestion('Update',f'Version {update_version} is available.  Do you want to update now?\nThe update will be handled in the background.')
+            if result=='yes':
+                on_check_updates(None, None)
     else:
         print('Software is currently up to date.')
 check_for_updates()   
 
-
-
-
-
-
-
-
-disable_notifications = True if config.get('main', 'disable_notifications') == "True" else False
 
 image = PIL.Image.open(resource_path("green_power.jpeg"))
 
@@ -188,7 +200,7 @@ def set_plan(name):
 
 
 def on_clicked(icon, item):
-    global running, activeplan, quit, disable_notifications,update_status, plans
+    global running, activeplan, quit, disable_notifications,update_status, plans, automatic_updates
     if str(item) == "Exit":
         running = False
         icon.stop()
@@ -208,6 +220,11 @@ def on_clicked(icon, item):
         config.set('main', 'disable_notifications', f'{"True" if disable_notifications == True else "False"}')
         if disable_notifications == False:
             send_notification("Notifications have been enabled.")
+    elif str(item) == "Automatic updates":
+        automatic_updates = True if automatic_updates == False else False
+        config.set('main', 'automatic_updates', f'{"True" if automatic_updates == True else "False"}')
+        if automatic_updates == True:
+            send_notification("Auto Power Saver will now update automatically in the background.")
     elif str(item) == "Major releases":
         update_status = 1
         config.set('main', 'update_frequency', str(update_status))
@@ -259,7 +276,7 @@ set_plan(activeplan)
 
 icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
     pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled = False),
-    pystray.MenuItem("Update now", on_check_updates, enabled = lambda item : update == True),
+    pystray.MenuItem("Update now", on_check_updates, visible=lambda item : update == True),
     pystray.MenuItem("Create power plan", pystray.Menu(
         pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
         pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
@@ -286,6 +303,7 @@ icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
         pystray.MenuItem("Minor releases", on_clicked, radio=True, checked=lambda item: update_status == 2),
         pystray.MenuItem("Bug fixes", on_clicked, radio=True, checked=lambda item: update_status == 3),
     )), 
+    pystray.MenuItem("Automatic updates", on_clicked, checked=lambda item: automatic_updates == True),  
     pystray.MenuItem("Exit", on_clicked)  
 ))
 icon.run_detached()
