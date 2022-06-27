@@ -87,7 +87,7 @@ def on_check_updates(icon, item):
     print(str(update_exe[0]))
 
     download(str(update_exe[0]), f'{TEMP_FOLDER}')
-    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe",shell=True)
+    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe /VERYSILENT",shell=True)
     quit = True
 def on_reinstall(icon, item):
     global plans
@@ -134,7 +134,7 @@ def check_for_updates():
             return
         else:
             pass
-        result=tkinter.messagebox.askquestion('Update',f'Version {update_version} is available.  Do you want to update now?')
+        result=tkinter.messagebox.askquestion('Update',f'Version {update_version} is available.  Do you want to update now?\nThe update will be handled in the background.')
         if result=='yes':
             on_check_updates(None, None)
         else:
