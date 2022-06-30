@@ -205,7 +205,7 @@ def on_clicked(icon, item):
         running = False
         icon.stop()
         quit = True
-    elif str(item) == "Edit power plan settings":
+    elif str(item) == "Edit Windows power plan settings":
         subprocess.call("%SystemRoot%\system32\control.exe /name Microsoft.PowerOptions",shell=True)
     elif str(item) == "High performance":
         subprocess.call(f'{resource_path("get_high_performance_power_plan.bat")}', shell=True)
@@ -274,36 +274,45 @@ def on_change_timer(icon, item):
 activeplan = "High performance" if status.ACLineStatus == 1 else "Power saver"
 set_plan(activeplan)
 
-icon = pystray.Icon("Auto Power Saver", image, menu=pystray.Menu(
+icon = pystray.Icon("Auto Power Saver", image, title="Auto Power Saver", menu=pystray.Menu(
     pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled = False),
+    pystray.MenuItem(f"Current power plan: {activeplan}", on_check_updates, enabled = False),
     pystray.MenuItem("Update now", on_check_updates, visible=lambda item : update == True),
-    pystray.MenuItem("Create power plan", pystray.Menu(
-        pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
-        pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
-        )),
-    pystray.MenuItem("Delete power plan", pystray.Menu(
-        pystray.MenuItem("High performance", on_reinstall),
-        pystray.MenuItem("Power saver", on_reinstall),
-        )),
-    pystray.MenuItem("Edit power plan settings", on_clicked),
     pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
-    pystray.MenuItem("Change timeout", pystray.Menu(
-        pystray.MenuItem("1 minute", on_change_timer, radio=True, checked=lambda item: enabled == 1),
-        pystray.MenuItem("2 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 2),
-        pystray.MenuItem("3 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 3),
-        pystray.MenuItem("5 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 5),
-        pystray.MenuItem("10 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 10),
-        pystray.MenuItem("15 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 15),
-        pystray.MenuItem("30 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 30),
-        pystray.MenuItem("60 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 60),
-        pystray.MenuItem("120 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 120)
-    )), 
-    pystray.MenuItem("Change update frequency", pystray.Menu(
-        pystray.MenuItem("Major releases", on_clicked, radio=True, checked=lambda item: update_status == 1),
-        pystray.MenuItem("Minor releases", on_clicked, radio=True, checked=lambda item: update_status == 2),
-        pystray.MenuItem("Bug fixes", on_clicked, radio=True, checked=lambda item: update_status == 3),
-    )), 
-    pystray.MenuItem("Automatic updates", on_clicked, checked=lambda item: automatic_updates == True),  
+    pystray.MenuItem("Automatic updates", on_clicked, checked=lambda item: automatic_updates == True),
+    pystray.MenuItem("Power settings", pystray.Menu(
+        pystray.MenuItem("Create power plan", pystray.Menu(
+            pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
+            pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
+            )),
+        pystray.MenuItem("Delete power plan", pystray.Menu(
+            pystray.MenuItem("High performance", on_reinstall),
+            pystray.MenuItem("Power saver", on_reinstall),
+            )),
+        pystray.MenuItem("Edit Windows power plan settings", on_clicked),
+        
+    )),
+    
+    pystray.MenuItem("App settings", pystray.Menu(
+        pystray.MenuItem("Change timeout", pystray.Menu(
+            pystray.MenuItem("1 minute", on_change_timer, radio=True, checked=lambda item: enabled == 1),
+            pystray.MenuItem("2 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 2),
+            pystray.MenuItem("3 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 3),
+            pystray.MenuItem("5 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 5),
+            pystray.MenuItem("10 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 10),
+            pystray.MenuItem("15 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 15),
+            pystray.MenuItem("30 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 30),
+            pystray.MenuItem("60 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 60),
+            pystray.MenuItem("120 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 120)
+        )), 
+        pystray.MenuItem("Change update frequency", pystray.Menu(
+            pystray.MenuItem("Major releases", on_clicked, radio=True, checked=lambda item: update_status == 1),
+            pystray.MenuItem("Minor releases", on_clicked, radio=True, checked=lambda item: update_status == 2),
+            pystray.MenuItem("Bug fixes", on_clicked, radio=True, checked=lambda item: update_status == 3),
+        )),  
+    )),
+    
+      
     pystray.MenuItem("Exit", on_clicked)  
 ))
 icon.run_detached()
