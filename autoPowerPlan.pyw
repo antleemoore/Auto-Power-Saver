@@ -27,51 +27,48 @@ class SYSTEM_POWER_STATUS(ctypes.Structure):
         ('BatteryLifeTime', wintypes.DWORD),
         ('BatteryFullLifeTime', wintypes.DWORD),
     ]
+class LASTINPUTINFO(Structure):
+    _fields_ = [
+        ('cbSize', c_uint),
+        ('dwTime', c_uint),
+    ]
+def get_ac_status():
+    SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
+    GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
+    GetSystemPowerStatus.argtypes = [SYSTEM_POWER_STATUS_P]
+    GetSystemPowerStatus.restype = wintypes.BOOL
 
-SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
+    status = SYSTEM_POWER_STATUS()
+    if not GetSystemPowerStatus(ctypes.pointer(status)):
+        raise ctypes.WinError()
+    return status
+
 TEMP_FOLDER = tempfile.gettempdir()  
-GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
-GetSystemPowerStatus.argtypes = [SYSTEM_POWER_STATUS_P]
-GetSystemPowerStatus.restype = wintypes.BOOL
-
-status = SYSTEM_POWER_STATUS()
-if not GetSystemPowerStatus(ctypes.pointer(status)):
-    raise ctypes.WinError()
 
 home = expanduser("~")
+config_path = f'{home}\Documents\\auto_power_saver_config.ini'
 config = ConfigParser()
-config.read(f'{home}\Documents\\auto_power_saver_config.ini')
+config.read(config_path)
+
 try:
     config.get('main', 'timeout')
     config.get('main', 'disable_notifications')
     config.get('main', 'update_frequency')
     config.get('main', 'automatic_updates')
 except:
-    if not config.has_section('main'):
-        config.add_section('main')
-    try:
-        config.get('main', 'timeout') 
-    except:
-        config.set('main', 'timeout', '3') 
-    try:
-        config.get('main', 'disable_notifications') 
-    except:
-        config.set('main', 'disable_notifications', 'False')
-    try:
-        config.get('main', 'update_frequency') 
-    except:
-        config.set('main', 'update_frequency', '3')
-    try: 
-        config.get('main', 'automatic_updates') 
-    except:
-        config.set('main', 'automatic_updates', 'False')
+    if not config.has_section('main'): config.add_section('main')
+    if not config.has_option('main', 'timeout'): config.set('main', 'timeout', '3') 
+    if not config.has_option('main', 'disable_notifications'): config.set('main', 'disable_notifications', 'False')
+    if not config.has_option('main', 'update_frequency'): config.set('main', 'update_frequency', '3')
+    if not config.has_option('main', 'automatic_updates'): config.set('main', 'automatic_updates', 'False')
+    
 timer = 60 * int(config.get('main', 'timeout'))
 update_status = int(config.get('main', 'update_frequency'))
 automatic_updates = True if config.get('main', 'automatic_updates') == "True" else False
 disable_notifications = True if config.get('main', 'disable_notifications') == "True" else False
-
 running = True
 quit = False
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
@@ -89,9 +86,12 @@ def send_notification(msg):
     notification.message = msg
     notification.icon = resource_path("green_power.jpeg")
     notification.send()   
+
 update = False
 app_version = 0
 update_version = 0
+powershell = '%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe'
+
 def download(url: str, dest_folder: str):
     if not os.path.exists(dest_folder):
         os.makedirs(dest_folder)  # create folder if it does not exist
@@ -119,7 +119,7 @@ def on_check_updates(icon, item):
     print(str(update_exe[0]))
 
     download(str(update_exe[0]), f'{TEMP_FOLDER}')
-    subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe Stop-Process -name 'Auto Power Saver' && %SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe /VERYSILENT",shell=True)
+    subprocess.call(f"{powershell} Stop-Process -name 'Auto Power Saver' && {powershell} {TEMP_FOLDER}\\autopowersaver_setup__v{update_version}.exe /VERYSILENT",shell=True)
     quit = True
 def on_reinstall(icon, item):
     global plans
@@ -133,8 +133,9 @@ def on_reinstall(icon, item):
     icon.update_menu()
 
 enabled = timer / 60
-with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
+with open(config_path, 'w') as f:
     config.write(f)
+
 def check_for_updates():
     global update, app_version, update_version
     webUrl  = urllib.request.urlopen('https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version')
@@ -161,16 +162,11 @@ def check_for_updates():
                 on_check_updates(None, None)
     else:
         print('Software is currently up to date.')
-check_for_updates()   
 
+check_for_updates()   
 
 image = PIL.Image.open(resource_path("green_power.jpeg"))
 
-class LASTINPUTINFO(Structure):
-    _fields_ = [
-        ('cbSize', c_uint),
-        ('dwTime', c_uint),
-    ]
 def get_idle_duration():
     lastInputInfo = LASTINPUTINFO()
     lastInputInfo.cbSize = sizeof(lastInputInfo)
@@ -178,7 +174,7 @@ def get_idle_duration():
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
     return millis / 1000.0
 def get_plans():
-    cmd_output = str(subprocess.check_output("%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe powercfg /list",shell=True))
+    cmd_output = str(subprocess.check_output(f"{powershell} powercfg /list",shell=True))
     powerplans = re.findall(r'\((.*?) *\)', cmd_output)
     powerplans.pop(0)
     guid = re.findall(r'(?<=GUID: ).*?(?=\s)', cmd_output)
@@ -187,18 +183,20 @@ def get_plans():
     for i in range(powerplans.__len__()):
         options[powerplans[i]] = guid[i]
     return options
+
 plans = get_plans()
+
 def set_plan(name):
     try:
-        subprocess.call(f"%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe powercfg /setactive {plans[name]}",shell=True)
+        subprocess.call(f"{powershell} powercfg /setactive {plans[name]}",shell=True)
         send_notification(f"The power plan was switched to {name}")
     except:
         send_notification(f"You are missing the {name} power plan.  Create it in settings.")
         return False
     return True
+
+control = '%SystemRoot%\system32\control.exe'
      
-
-
 def on_clicked(icon, item):
     global running, activeplan, quit, disable_notifications,update_status, plans, automatic_updates
     if str(item) == "Exit":
@@ -206,7 +204,7 @@ def on_clicked(icon, item):
         icon.stop()
         quit = True
     elif str(item) == "Edit Windows power plan settings":
-        subprocess.call("%SystemRoot%\system32\control.exe /name Microsoft.PowerOptions",shell=True)
+        subprocess.call(f"{control} /name Microsoft.PowerOptions",shell=True)
     elif str(item) == "High performance":
         subprocess.call(f'{resource_path("get_high_performance_power_plan.bat")}', shell=True)
         send_notification("High performance power plan has been downloaded.")
@@ -234,66 +232,23 @@ def on_clicked(icon, item):
     elif str(item) == "Bug fixes":
         update_status = 3
         config.set('main', 'update_frequency', str(update_status))
-    with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
+    
+    with open(config_path, 'w') as f:
         config.write(f)
     icon.update_menu()  
 def on_change_timer(icon, item):
+    choice = int(re.search(r'\d+', str(item)).group())
     global enabled, timer, config
-    if str(item) == "1 minute":
-        enabled = 1
-        timer = 60
-    elif str(item) == "2 minutes":
-        enabled = 2
-        timer = 60 * 2
-    elif str(item) == "3 minutes":
-        enabled = 3
-        timer = 60 * 3
-    elif str(item) == "5 minutes":
-        enabled = 5
-        timer = 60 * 5
-    elif str(item) == "10 minutes":
-        enabled = 10
-        timer = 60 * 10
-    elif str(item) == "15 minutes":
-        enabled = 15
-        timer = 60 * 15
-    elif str(item) == "30 minutes":
-        enabled = 30
-        timer = 60 * 30
-    elif str(item) == "60 minutes":
-        enabled = 60
-        timer = 60 * 60
-    elif str(item) == "120 minutes":
-        enabled = 120
-        timer = 60 * 120
+    enabled = choice
+    timer = 60 * choice
     config.set('main', 'timeout', str(int(timer/60)))
-    with open(f'{home}\Documents\\auto_power_saver_config.ini', 'w') as f:
+    with open(config_path, 'w') as f:
         config.write(f)
     send_notification(f"The timeout length was changed to {int(timer / 60)} minutes.")
 
-activeplan = "High performance" if status.ACLineStatus == 1 else "Power saver"
+activeplan = "High performance" if get_ac_status().ACLineStatus == 1 else "Power saver"
 set_plan(activeplan)
-
-icon = pystray.Icon("Auto Power Saver", image, title="Auto Power Saver", menu=pystray.Menu(
-    pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled = False),
-    pystray.MenuItem(f"Current power plan: {activeplan}", on_check_updates, enabled = False),
-    pystray.MenuItem("Update now", on_check_updates, visible=lambda item : update == True),
-    pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
-    pystray.MenuItem("Automatic updates", on_clicked, checked=lambda item: automatic_updates == True),
-    pystray.MenuItem("Power settings", pystray.Menu(
-        pystray.MenuItem("Create power plan", pystray.Menu(
-            pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
-            pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
-            )),
-        pystray.MenuItem("Delete power plan", pystray.Menu(
-            pystray.MenuItem("High performance", on_reinstall),
-            pystray.MenuItem("Power saver", on_reinstall),
-            )),
-        pystray.MenuItem("Edit Windows power plan settings", on_clicked),
-        
-    )),
-    
-    pystray.MenuItem("App settings", pystray.Menu(
+app_settings = pystray.Menu(
         pystray.MenuItem("Change timeout", pystray.Menu(
             pystray.MenuItem("1 minute", on_change_timer, radio=True, checked=lambda item: enabled == 1),
             pystray.MenuItem("2 minutes", on_change_timer, radio=True, checked=lambda item: enabled == 2),
@@ -310,29 +265,42 @@ icon = pystray.Icon("Auto Power Saver", image, title="Auto Power Saver", menu=py
             pystray.MenuItem("Minor releases", on_clicked, radio=True, checked=lambda item: update_status == 2),
             pystray.MenuItem("Bug fixes", on_clicked, radio=True, checked=lambda item: update_status == 3),
         )),  
-    )),
-    
-      
+    )
+power_settings = pystray.Menu(
+        pystray.MenuItem("Create power plan", pystray.Menu(
+            pystray.MenuItem("High performance", on_clicked, checked=lambda item: plans.get("High performance") != None),
+            pystray.MenuItem("Power saver", on_clicked, checked=lambda item: plans.get("Power saver") != None),
+            )),
+        pystray.MenuItem("Delete power plan", pystray.Menu(
+            pystray.MenuItem("High performance", on_reinstall),
+            pystray.MenuItem("Power saver", on_reinstall),
+            )),
+        pystray.MenuItem("Edit Windows power plan settings", on_clicked),
+        
+    )
+
+icon = pystray.Icon("Auto Power Saver", image, title="Auto Power Saver", menu=pystray.Menu(
+    pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled = False),
+    pystray.MenuItem(f"Current power plan: {activeplan}", on_check_updates, enabled = False),
+    pystray.MenuItem("Update now", on_check_updates, visible=lambda item : update == True),
+    pystray.MenuItem("Disable notifications", on_clicked, checked=lambda item: disable_notifications == True),
+    pystray.MenuItem("Automatic updates", on_clicked, checked=lambda item: automatic_updates == True),
+    pystray.MenuItem("Power settings", power_settings),
+    pystray.MenuItem("App settings", app_settings),
     pystray.MenuItem("Exit", on_clicked)  
 ))
+
 icon.run_detached()
 while True:
     sleep(0.5)
     if quit:
         sys.exit()
     if running:
-        SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
-        GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
-        GetSystemPowerStatus.argtypes = [SYSTEM_POWER_STATUS_P]
-        GetSystemPowerStatus.restype = wintypes.BOOL
-        status = SYSTEM_POWER_STATUS()
-        if not GetSystemPowerStatus(ctypes.pointer(status)):
-            raise ctypes.WinError()
         if dt.now().minute % 15 == 0 and dt.now().second == 0:
             check_for_updates()
             icon.update_menu()
         new_plan = activeplan
-        if get_idle_duration() <= timer and status.ACLineStatus == 1: 
+        if get_idle_duration() <= timer and get_ac_status().ACLineStatus == 1: 
             new_plan = "High performance"
         else:
             new_plan = "Power saver"
