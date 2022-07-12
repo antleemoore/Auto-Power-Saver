@@ -7,3 +7,5 @@ autopowersaverinstaller.ifp
 pyinstaller_config.json
 build
 dist
+build_script.bat
+Auto Power Saver.spec
