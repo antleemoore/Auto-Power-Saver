@@ -195,11 +195,9 @@ def check_for_updates():
     else:
         print('Software is currently up to date.')
 
-try:
-    check_for_updates()
-except:
-    print("Error while updating software.  Try reconnecting to the internet.")
-    
+
+check_for_updates()
+
 image = PIL.Image.open(resource_path("green_power.jpeg"))
 
 
