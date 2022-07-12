@@ -9,3 +9,5 @@ build
 dist
 build_script.bat
 Auto Power Saver.spec
+.vscode/settings.json
+v2_pyinstaller_config.json
