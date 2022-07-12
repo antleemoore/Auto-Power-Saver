@@ -189,15 +189,16 @@ def check_for_updates():
             on_check_updates(None, None)
         else:
             result = tkinter.messagebox.askquestion(
-                'Update', f'Version {update_version} is available.  Do you want to update now?\nThe update will be handled in the background.')
+                'Auto Power Saver Update', f'Version {update_version} is available.  Do you want to update now?\nThe update will be handled in the background.')
             if result == 'yes':
                 on_check_updates(None, None)
     else:
         print('Software is currently up to date.')
 
-
-check_for_updates()
-
+try:
+    check_for_updates()
+except:
+    print("Unable to check for updates. Try reconnecting to the internet.")
 image = PIL.Image.open(resource_path("green_power.jpeg"))
 
 
