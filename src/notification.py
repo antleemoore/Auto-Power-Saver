@@ -8,7 +8,7 @@ def send_notification(msg, config):
     notification = Notify()
     notification.title = f"Auto Power Saver"
     notification.message = msg
-    notification.icon = resource_path("green_power.jpeg")
+    notification.icon = resource_path("resources/green_power.jpeg")
     notification.send()
 
 
