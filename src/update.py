@@ -20,14 +20,14 @@ def download(url: str, dest_folder: str):
 
     r = requests.get(url, stream=True)
     if r.ok:
-        print("saving to", os.path.abspath(file_path))
+        print("Saving to", os.path.abspath(file_path))
         with open(file_path, "wb") as f:
             for chunk in r.iter_content(chunk_size=1024 * 8):
                 if chunk:
                     f.write(chunk)
                     f.flush()
                     os.fsync(f.fileno())
-    else:  # HTTP status code 4XX/5XX
+    else:
         print("Download failed: status code {}\n{}".format(r.status_code, r.text))
 
 
@@ -45,10 +45,8 @@ def get_app_update_versions():
 
 def check_for_updates(config):
     app_version, update_version = get_app_update_versions()
-    print(app_version, update_version)
     current_major, current_minor, current_bug = map(int, app_version.split("."))
     new_major, new_minor, new_bug = map(int, update_version.split("."))
-    print(semver.compare(update_version, app_version))
     if semver.compare(update_version, app_version) == 1:
         if config.update_frequency == 1 and new_major <= current_major:
             return
@@ -85,8 +83,6 @@ def on_check_updates(icon, item):
     webUrl = urllib.request.urlopen(url)
     update_data = webUrl.read()
     update_exe = re.findall("http.*exe", str(update_data))
-    print(str(update_exe[0]))
-
     download(str(update_exe[0]), f'{get_sys_folder("TEMP")}')
     subprocess.call(
         f"{get_powershell_path()} Stop-Process -name 'Auto Power Saver' && {get_powershell_path()} {get_sys_folder('TEMP')}\\autopowersaver_setup__v{update_version}.exe /VERYSILENT",
