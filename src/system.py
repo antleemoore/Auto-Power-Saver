@@ -5,23 +5,25 @@ import sys
 import tempfile
 from os.path import expanduser
 
+
 class SYSTEM_POWER_STATUS(ctypes.Structure):
     _fields_ = [
-        ('ACLineStatus', wintypes.BYTE),
-        ('BatteryFlag', wintypes.BYTE),
-        ('BatteryLifePercent', wintypes.BYTE),
-        ('Reserved1', wintypes.BYTE),
-        ('BatteryLifeTime', wintypes.DWORD),
-        ('BatteryFullLifeTime', wintypes.DWORD),
+        ("ACLineStatus", wintypes.BYTE),
+        ("BatteryFlag", wintypes.BYTE),
+        ("BatteryLifePercent", wintypes.BYTE),
+        ("Reserved1", wintypes.BYTE),
+        ("BatteryLifeTime", wintypes.DWORD),
+        ("BatteryFullLifeTime", wintypes.DWORD),
     ]
 
 
 class LASTINPUTINFO(Structure):
     _fields_ = [
-        ('cbSize', c_uint),
-        ('dwTime', c_uint),
+        ("cbSize", c_uint),
+        ("dwTime", c_uint),
     ]
-    
+
+
 def get_ac_status():
     SYSTEM_POWER_STATUS_P = ctypes.POINTER(SYSTEM_POWER_STATUS)
     GetSystemPowerStatus = ctypes.windll.kernel32.GetSystemPowerStatus
@@ -33,12 +35,14 @@ def get_ac_status():
         raise ctypes.WinError()
     return status
 
+
 def get_idle_duration():
     lastInputInfo = LASTINPUTINFO()
     lastInputInfo.cbSize = sizeof(lastInputInfo)
     windll.user32.GetLastInputInfo(byref(lastInputInfo))
     millis = windll.kernel32.GetTickCount() - lastInputInfo.dwTime
     return millis / 1000.0
+
 
 def get_sys_folder(folder):
     if folder == "TEMP":
@@ -48,6 +52,7 @@ def get_sys_folder(folder):
     else:
         return None
 
+
 def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
@@ -56,5 +61,6 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+
 def get_powershell_path():
-    return '%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe'
+    return "%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe"
