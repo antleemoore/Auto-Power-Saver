@@ -1,13 +1,11 @@
 import re
 import subprocess
-from notification import send_notification
-from system import get_powershell_path, resource_path
+from system.notification import send_notification
+from system.system import get_powershell_path, resource_path
 
 
 def get_plans():
-    cmd_output = str(
-        subprocess.check_output(f"{get_powershell_path()} powercfg /list", shell=True)
-    )
+    cmd_output = str(subprocess.check_output(f"{get_powershell_path()} powercfg /list", shell=True))
     powerplans = re.findall(r"\((.*?) *\)", cmd_output)
     powerplans.pop(0)
     guid = re.findall(r"(?<=GUID: ).*?(?=\s)", cmd_output)
@@ -21,9 +19,7 @@ def get_plans():
 def set_plan(name, config):
     plans = get_plans()
     try:
-        subprocess.call(
-            f"{get_powershell_path()} powercfg /setactive {plans[name]}", shell=True
-        )
+        subprocess.call(f"{get_powershell_path()} powercfg /setactive {plans[name]}", shell=True)
         send_notification(f"The power plan was switched to {name}", config=config)
     except:
         send_notification(
@@ -41,11 +37,7 @@ def delete_power_plan(name, config):
 
 def install_power_plan(name, config):
     chosen_power_plan = (
-        "get_high_performance_power_plan.bat"
-        if name == "High performance"
-        else "get_power_saver_power_plan.bat"
+        "get_high_performance_power_plan.bat" if name == "High performance" else "get_power_saver_power_plan.bat"
     )
-    subprocess.call(
-        f"{resource_path('resources/plans/' + chosen_power_plan)}", shell=True
-    )
+    subprocess.call(f"{resource_path('resources/plans/' + chosen_power_plan)}", shell=True)
     send_notification("The selected power plan has been downloaded.", config=config)

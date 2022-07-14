@@ -1,16 +1,11 @@
 import pystray
-from config import Config
-from menu_handlers import *
-from power_plan import get_plans
-import PIL.Image
 
-from system import get_ac_status, resource_path
-from update import check_for_updates, get_app_update_versions, on_check_updates
+from menu.menu_handlers import (
+    on_change_timer,
+    on_release_frequency,
+    config,
+)
 
-image = PIL.Image.open(resource_path("resources/images/green_power.jpeg"))
-activeplan = "High performance" if get_ac_status().ACLineStatus == 1 else "Power saver"
-app_version, update_version = get_app_update_versions()
-update = check_for_updates(config)
 app_settings = pystray.Menu(
     pystray.MenuItem(
         "Change timeout",
@@ -93,57 +88,5 @@ app_settings = pystray.Menu(
                 checked=lambda item: config.update_frequency == 3,
             ),
         ),
-    ),
-)
-power_settings = pystray.Menu(
-    pystray.MenuItem(
-        "Create power plan",
-        pystray.Menu(
-            pystray.MenuItem(
-                "High performance",
-                on_install,
-                checked=lambda item: get_plans().get("High performance") != None,
-            ),
-            pystray.MenuItem(
-                "Power saver",
-                on_install,
-                checked=lambda item: get_plans().get("Power saver") != None,
-            ),
-        ),
-    ),
-    pystray.MenuItem(
-        "Delete power plan",
-        pystray.Menu(
-            pystray.MenuItem("High performance", on_delete),
-            pystray.MenuItem("Power saver", on_delete),
-        ),
-    ),
-    pystray.MenuItem("Edit Windows power plan settings", on_win_power_settings),
-)
-icon = pystray.Icon(
-    "Auto Power Saver",
-    image,
-    title="Auto Power Saver",
-    menu=pystray.Menu(
-        pystray.MenuItem(f"Version: {app_version}", on_check_updates, enabled=False),
-        pystray.MenuItem(
-            f"Current power plan: {activeplan}", on_check_updates, enabled=False
-        ),
-        pystray.MenuItem(
-            "Update now", on_check_updates, visible=lambda item: update == True
-        ),
-        pystray.MenuItem(
-            "Disable notifications",
-            on_notifications,
-            checked=lambda item: config.disable_notifications == True,
-        ),
-        pystray.MenuItem(
-            "Automatic updates",
-            on_auto_updates,
-            checked=lambda item: config.automatic_updates == True,
-        ),
-        pystray.MenuItem("Power settings", power_settings),
-        pystray.MenuItem("App settings", app_settings),
-        pystray.MenuItem("Exit", on_exit),
     ),
 )

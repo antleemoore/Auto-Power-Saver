@@ -2,11 +2,11 @@ import sys
 from time import sleep
 from datetime import datetime as dt
 from tkinter import *
-from power_plan import set_plan
-from system import get_ac_status, get_idle_duration
-from update import check_for_updates
-from menu import icon, activeplan, config, update
-from menu_handlers import config, check_quit_status
+from system.power_plan import set_plan
+from system.system import get_ac_status, get_idle_duration, is_admin
+from update.update import check_for_updates
+from menu.menu_icon import icon, activeplan, config, update
+from menu.menu_handlers import config, check_quit_status
 
 
 def init():

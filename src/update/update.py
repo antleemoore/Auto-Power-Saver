@@ -1,13 +1,13 @@
-import subprocess
 import re
 import os
+import subprocess
 import urllib.request
 import requests
 import semver
 from tkinter import *
 import tkinter.messagebox
-from notification import send_notification
-from system import get_powershell_path, get_sys_folder, resource_path
+from system.notification import send_notification
+from system.system import get_powershell_path, get_sys_folder, resource_path
 
 
 def download(url: str, dest_folder: str):
@@ -32,9 +32,7 @@ def download(url: str, dest_folder: str):
 
 
 def get_app_update_versions():
-    webUrl = urllib.request.urlopen(
-        "https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version"
-    )
+    webUrl = urllib.request.urlopen("https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version")
     data = webUrl.read()
     version_file = open(f"{resource_path('version')}", "r")
     version = version_file.read()
@@ -50,11 +48,7 @@ def check_for_updates(config):
     if semver.compare(update_version, app_version) == 1:
         if config.update_frequency == 1 and new_major <= current_major:
             return
-        elif (
-            config.update_frequency == 2
-            and new_major >= current_major
-            and new_minor <= current_minor
-        ):
+        elif config.update_frequency == 2 and new_major >= current_major and new_minor <= current_minor:
             return
         else:
             pass
@@ -89,31 +83,3 @@ def on_check_updates(icon, item):
         shell=True,
     )
     return True
-
-
-def handle_auto_updates(config):
-    config.automatic_updates = True if config.automatic_updates == False else False
-    config.config.set(
-        "main",
-        "automatic_updates",
-        f'{"True" if config.automatic_updates == True else "False"}',
-    )
-    if config.automatic_updates == True:
-        send_notification(
-            "Auto Power Saver will now update automatically in the background.",
-            config=config,
-        )
-
-
-def handle_update_frequency(name, config):
-    if name == "Major releases":
-        config.update_frequency = 1
-        config.config.set("main", "update_frequency", str(config.update_frequency))
-    elif name == "Minor releases":
-        config.update_frequency = 2
-        config.config.set("main", "update_frequency", str(config.update_frequency))
-    elif name == "Bug fixes":
-        config.update_frequency = 3
-        config.config.set("main", "update_frequency", str(config.update_frequency))
-
-    config.write_to_config()

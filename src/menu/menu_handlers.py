@@ -1,9 +1,9 @@
 import re
 import subprocess
-from config import Config
-from notification import handle_notification_settings, send_notification
-from power_plan import delete_power_plan, install_power_plan
-from update import handle_auto_updates, handle_update_frequency
+from system.config import Config
+from system.notification import handle_notification_settings, send_notification
+from system.power_plan import delete_power_plan, install_power_plan
+from update.update_handlers import handle_auto_updates, handle_update_frequency
 
 control = "%SystemRoot%\system32\control.exe"
 config = Config()

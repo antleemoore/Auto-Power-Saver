@@ -1,4 +1,4 @@
-from system import resource_path
+from system.system import resource_path
 from notifypy import Notify
 
 
@@ -13,9 +13,7 @@ def send_notification(msg, config):
 
 
 def handle_notification_settings(config):
-    config.disable_notifications = (
-        True if config.disable_notifications == False else False
-    )
+    config.disable_notifications = True if config.disable_notifications == False else False
     config.config.set(
         "main",
         "disable_notifications",

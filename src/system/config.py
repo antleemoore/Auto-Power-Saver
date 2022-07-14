@@ -1,16 +1,12 @@
 import configparser
-from system import get_sys_folder
+from system.system import get_sys_folder
 
 
 class Config:
     def __init__(self):
-        self.config_path = (
-            f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini'
-        )
+        self.config_path = f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini'
         self.config = configparser.ConfigParser()
-        self.config.read(
-            f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini'
-        )
+        self.config.read(f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini')
 
         try:
             self.config.get("main", "timeout")
@@ -31,14 +27,8 @@ class Config:
 
         self.timeout = 60 * int(self.config.get("main", "timeout"))
         self.update_frequency = int(self.config.get("main", "update_frequency"))
-        self.automatic_updates = (
-            True if self.config.get("main", "automatic_updates") == "True" else False
-        )
-        self.disable_notifications = (
-            True
-            if self.config.get("main", "disable_notifications") == "True"
-            else False
-        )
+        self.automatic_updates = True if self.config.get("main", "automatic_updates") == "True" else False
+        self.disable_notifications = True if self.config.get("main", "disable_notifications") == "True" else False
 
     def write_to_config(self):
         with open(self.config_path, "w") as f:
