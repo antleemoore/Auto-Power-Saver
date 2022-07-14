@@ -41,3 +41,4 @@ def run():
 init()
 while True:
     run()
+    sleep(0.5)
