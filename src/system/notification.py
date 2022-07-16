@@ -14,10 +14,6 @@ def send_notification(msg, config):
 
 def handle_notification_settings(config):
     config.disable_notifications = True if config.disable_notifications == False else False
-    config.config.set(
-        "main",
-        "disable_notifications",
-        f'{"True" if config.disable_notifications == True else "False"}',
-    )
+    config.write_to_config()
     if config.disable_notifications == False:
         send_notification("Notifications have been enabled.", config=config)

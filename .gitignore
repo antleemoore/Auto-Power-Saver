@@ -11,3 +11,5 @@ build_script.bat
 Auto Power Saver.spec
 .vscode/settings.json
 v2_pyinstaller_config.json
+tests/test_strategy.txt
+test_strategy.txt

@@ -1,35 +1,53 @@
 import configparser
-from system.system import get_sys_folder
 
 
 class Config:
-    def __init__(self):
-        self.config_path = f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini'
-        self.config = configparser.ConfigParser()
-        self.config.read(f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini')
+    def __init__(self, config_path):
+        self.config_path = config_path
+        self.parser = configparser.ConfigParser()
+        self.parser.read(config_path)
 
         try:
-            self.config.get("main", "timeout")
-            self.config.get("main", "disable_notifications")
-            self.config.get("main", "update_frequency")
-            self.config.get("main", "automatic_updates")
+            self.parser.get("main", "timeout")
+            self.parser.get("main", "disable_notifications")
+            self.parser.get("main", "update_frequency")
+            self.parser.get("main", "automatic_updates")
+            self.timeout = 60 * int(self.parser.get("main", "timeout"))
+            self.update_frequency = int(self.parser.get("main", "update_frequency"))
+            self.automatic_updates = True if self.parser.get("main", "automatic_updates") == "True" else False
+            self.disable_notifications = True if self.parser.get("main", "disable_notifications") == "True" else False
         except:
-            if not self.config.has_section("main"):
-                self.config.add_section("main")
-            if not self.config.has_option("main", "timeout"):
-                self.config.set("main", "timeout", "3")
-            if not self.config.has_option("main", "disable_notifications"):
-                self.config.set("main", "disable_notifications", "False")
-            if not self.config.has_option("main", "update_frequency"):
-                self.config.set("main", "update_frequency", "3")
-            if not self.config.has_option("main", "automatic_updates"):
-                self.config.set("main", "automatic_updates", "False")
-
-        self.timeout = 60 * int(self.config.get("main", "timeout"))
-        self.update_frequency = int(self.config.get("main", "update_frequency"))
-        self.automatic_updates = True if self.config.get("main", "automatic_updates") == "True" else False
-        self.disable_notifications = True if self.config.get("main", "disable_notifications") == "True" else False
+            self.default_values()
 
     def write_to_config(self):
+        try:
+            self.parser.set("main", "timeout", str(self.timeout) if str(self.timeout).isdigit() else "3")
+            self.parser.set(
+                "main",
+                "disable_notifications",
+                str(self.disable_notifications) if str(self.disable_notifications) in ["True", "False"] else "False",
+            )
+            self.parser.set(
+                "main", "update_frequency", str(self.update_frequency) if str(self.update_frequency).isdigit() else "3"
+            )
+            self.parser.set(
+                "main",
+                "automatic_updates",
+                str(self.automatic_updates) if str(self.automatic_updates) in ["True", "False"] else "False",
+            )
+        except:
+            self.default_values()
         with open(self.config_path, "w") as f:
-            self.config.write(f)
+            self.parser.write(f)
+
+    def default_values(self):
+        if not self.parser.has_section("main"):
+            self.parser.add_section("main")
+        self.parser.set("main", "timeout", "3")
+        self.parser.set("main", "disable_notifications", "False")
+        self.parser.set("main", "update_frequency", "3")
+        self.parser.set("main", "automatic_updates", "False")
+        self.timeout = 3
+        self.automatic_updates = False
+        self.disable_notifications = False
+        self.update_frequency = 3

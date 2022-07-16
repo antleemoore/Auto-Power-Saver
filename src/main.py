@@ -25,7 +25,7 @@ def run():
         if dt.now().minute % 15 == 0 and dt.now().second == 0:
             update = check_for_updates(config)
 
-        if get_idle_duration() <= config.timeout and get_ac_status().ACLineStatus == 1:
+        if get_idle_duration() <= (config.timeout * 60) and get_ac_status().ACLineStatus == 1:
             new_plan = "High performance"
         else:
             new_plan = "Power saver"

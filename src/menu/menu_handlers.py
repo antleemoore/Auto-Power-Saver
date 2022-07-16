@@ -3,10 +3,11 @@ import subprocess
 from system.config import Config
 from system.notification import handle_notification_settings, send_notification
 from system.power_plan import delete_power_plan, install_power_plan
+from system.system import get_sys_folder
 from update.update_handlers import handle_auto_updates, handle_update_frequency
 
 control = "%SystemRoot%\system32\control.exe"
-config = Config()
+config = Config(f'{get_sys_folder("HOME")}\Documents\\auto_power_saver_config.ini')
 quit = False
 
 
@@ -45,6 +46,11 @@ def on_notifications(icon, item):
 def on_auto_updates(icon, item):
     global config
     handle_auto_updates(config)
+    if config.automatic_updates == True:
+        send_notification(
+            "Auto Power Saver will now update automatically in the background.",
+            config=config,
+        )
     icon.update_menu()
 
 
@@ -57,11 +63,10 @@ def on_release_frequency(icon, item):
 def on_change_timer(icon, item):
     global config
     choice = int(re.search(r"\d+", str(item)).group())
-    config.timeout = 60 * choice
-    config.config.set("main", "timeout", str(int(config.timeout / 60)))
+    config.timeout = choice
     config.write_to_config()
     send_notification(
-        f"The timeout length was changed to {int(config.timeout / 60)} minutes.",
+        f"The timeout length was changed to {int(config.timeout)} minutes.",
         config=config,
     )
     icon.update_menu()
