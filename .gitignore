@@ -13,3 +13,5 @@ Auto Power Saver.spec
 v2_pyinstaller_config.json
 tests/test_strategy.txt
 test_strategy.txt
+search_results.txt
+resources/configs/v3_pyinstaller_config.json

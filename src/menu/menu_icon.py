@@ -1,5 +1,4 @@
 import pystray
-from system.config import Config
 from menu.menu_handlers import *
 import PIL.Image
 
@@ -7,6 +6,7 @@ from system.system import get_ac_status, resource_path
 from update.update import check_for_updates, get_app_update_versions, on_check_updates
 from menu.menu_app_settings import app_settings
 from menu.menu_power_settings import power_settings
+from menu.menu_additional_features import additional_features
 
 image = PIL.Image.open(resource_path("resources/images/green_power.jpeg"))
 activeplan = "High performance" if get_ac_status().ACLineStatus == 1 else "Power saver"
@@ -33,6 +33,7 @@ icon = pystray.Icon(
         ),
         pystray.MenuItem("Power settings", power_settings),
         pystray.MenuItem("App settings", app_settings),
+        pystray.MenuItem("Additional features", additional_features),
         pystray.MenuItem("Exit", on_exit),
     ),
 )
