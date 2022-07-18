@@ -5,7 +5,7 @@ from tkinter import messagebox, simpledialog
 from concurrent.futures import ThreadPoolExecutor
 import tkinter as tk
 
-from system.system import resource_path
+from system.system import get_sys_folder, resource_path
 
 executors_list = []
 
@@ -39,9 +39,9 @@ def menu_item_run_search():
     root.after(200, run_search, root, inp, drive)
     root.mainloop()
 
-    with open(f"{resource_path('search_results.txt')}", "w") as f:
+    with open(f'{get_sys_folder("TEMP")}\\auto_power_saver_search_results.txt', "w") as f:
         f.write(search_results)
-    startfile(resource_path("search_results.txt"))
+    startfile(f'{get_sys_folder("TEMP")}\\auto_power_saver_search_results.txt')
 
 
 def run_search(root, inp, drive):
