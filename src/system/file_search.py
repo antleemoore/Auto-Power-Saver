@@ -1,42 +1,48 @@
-from os import walk, path, startfile
-from sys import exit
+from os import startfile
+import subprocess
 from timeit import default_timer as timer
-from tkinter import messagebox, simpledialog
-from concurrent.futures import ThreadPoolExecutor
+from tkinter import simpledialog
 import tkinter as tk
+import tkinter
 
 from system.system import get_sys_folder, resource_path
+import string
+from ctypes import windll
 
-executors_list = []
 
 search_results = ""
 
 
-def find_file(r, f, inp):
-    global search_results
-    for file in f:
-        fp = ""
-        if inp in file:
-            fp = path.join(r, file)
-            search_results += fp + "\n"
+def get_drives():
+    drives = []
+    bitmask = windll.kernel32.GetLogicalDrives()
+    for letter in string.ascii_uppercase:
+        if bitmask & 1:
+            drives.append(letter)
+        bitmask >>= 1
+
+    return drives
 
 
 def menu_item_run_search():
     global search_results
     search_results = ""
+    # tkinter se
     drive = simpledialog.askstring("File Search", "Which drive do you want to search?\n\n Example: C")
-    if not drive:
+    if not drive or drive not in get_drives():
+        tkinter.messagebox.showinfo("File Search", "You need to enter a valid drive letter.")
         return
     inp = simpledialog.askstring("File Search", "Enter the file name you want to search for:\n\n Example: example.txt")
     if not inp:
+        tkinter.messagebox.showinfo("File Search", "You didn't enter a file name.")
         return
 
     root = tk.Tk()
     root.title("Auto Power Saver - Deep File Search")
-    root.geometry("400x100")
+    root.geometry("300x100")
     label = tk.Label(root, text="Waiting for the deep search to finish...")
     label.pack()
-    root.after(200, run_search, root, inp, drive)
+    root.after(200, run_search, root, inp, drive + ":\\")
     root.mainloop()
 
     with open(f'{get_sys_folder("TEMP")}\\auto_power_saver_search_results.txt', "w") as f:
@@ -45,10 +51,13 @@ def menu_item_run_search():
 
 
 def run_search(root, inp, drive):
-    print("Search is starting...")
+    global search_results
     start = timer()
-    with ThreadPoolExecutor() as executor:
-        for r, d, f in walk(f"{drive}:\\"):
-            executors_list.append(executor.submit(find_file, r, f, inp))
-    print(f"Search took {timer() - start} seconds.")
+    # run resources/additional features/file_search.exe using subprocess and store the printed output in search_results
+    search_results = subprocess.check_output(
+        [resource_path("resources/additional_features/file_search.exe"), inp, drive],
+        shell=True,
+        universal_newlines=True,
+    )
+    print(f"Search finished in {timer() - start} seconds.")
     root.destroy()
