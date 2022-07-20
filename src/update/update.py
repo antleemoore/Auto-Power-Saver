@@ -36,15 +36,17 @@ def download(url: str, dest_folder: str):
 
 
 def get_app_update_versions():
-    print(f"Opening version file from github repo...")
-    webUrl = urllib.request.urlopen("https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version")
-    data = webUrl.read()
-    print(f"Opening version file from local application...")
-    version_file = open(f"{resource_path('version')}", "r")
-    version = version_file.read()
-    app_version = re.search(r"([\d.]+)", str(version)).group(1)
-    update_version = re.search(r"\s*([\d.]+)", str(data)).group(1)
-    return app_version, update_version
+    try:
+        webUrl = urllib.request.urlopen("https://raw.githubusercontent.com/antleemoore/Auto-Power-Saver/main/version")
+        data = webUrl.read()
+        version_file = open(f"{resource_path('version')}", "r")
+        version = version_file.read()
+        app_version = re.search(r"([\d.]+)", str(version)).group(1)
+        update_version = re.search(r"\s*([\d.]+)", str(data)).group(1)
+        return app_version, update_version
+    except:
+        print(f"Error getting update versions.")
+        return "0.0.0", "0.0.0"
 
 
 def check_for_updates(config):

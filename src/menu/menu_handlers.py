@@ -15,7 +15,6 @@ print()
 
 
 def check_quit_status():
-    print("Quit: " + str(quit))
     return quit
 
 

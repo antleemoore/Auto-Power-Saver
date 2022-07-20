@@ -12,7 +12,6 @@ from menu.menu_handlers import config, check_quit_status
 
 def init():
     set_plan(activeplan, config)
-    print("Power saver plan set to " + activeplan)
     if not is_admin() and config.automatic_updates == True:
         tkinter.messagebox.showinfo(
             "Auto Power Saver",

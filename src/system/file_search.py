@@ -47,7 +47,7 @@ def menu_item_run_search():
     label.pack()
     root.after(200, run_search, root, inp, drive + ":\\")
     root.mainloop()
-    print("Writing search results to file...")
+    print(f"Writing search results to {get_sys_folder('TEMP')}\\auto_power_saver_search_results.txt...")
     with open(f'{get_sys_folder("TEMP")}\\auto_power_saver_search_results.txt', "w") as f:
         f.write(search_results)
     startfile(f'{get_sys_folder("TEMP")}\\auto_power_saver_search_results.txt')
@@ -64,5 +64,5 @@ def run_search(root, inp, drive):
         universal_newlines=True,
     )
     print(f"Search finished in {timer() - start} seconds.")
-    print(f"Search results:\n {search_results}\n")
+    print(f"\nSearch results:\n{search_results}")
     root.destroy()

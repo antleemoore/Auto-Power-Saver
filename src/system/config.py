@@ -13,7 +13,7 @@ class Config:
             self.parser.get("main", "disable_notifications")
             self.parser.get("main", "update_frequency")
             self.parser.get("main", "automatic_updates")
-            self.timeout = 60 * int(self.parser.get("main", "timeout"))
+            self.timeout = int(self.parser.get("main", "timeout"))
             self.update_frequency = int(self.parser.get("main", "update_frequency"))
             self.automatic_updates = True if self.parser.get("main", "automatic_updates") == "True" else False
             self.disable_notifications = True if self.parser.get("main", "disable_notifications") == "True" else False

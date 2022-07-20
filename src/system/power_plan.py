@@ -5,7 +5,6 @@ from system.system import get_powershell_path, resource_path
 
 
 def get_plans():
-    print("Getting power plans from Windows...")
     cmd_output = str(subprocess.check_output(f"{get_powershell_path()} powercfg /list", shell=True))
     powerplans = re.findall(r"\((.*?) *\)", cmd_output)
     powerplans.pop(0)
@@ -18,6 +17,7 @@ def get_plans():
 
 
 def set_plan(name, config):
+    print("Getting power plans from Windows...")
     plans = get_plans()
     try:
         subprocess.call(f"{get_powershell_path()} powercfg /setactive {plans[name]}", shell=True)

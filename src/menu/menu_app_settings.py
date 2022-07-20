@@ -1,13 +1,25 @@
 import pystray
 
 from menu.menu_handlers import (
+    on_auto_updates,
     on_change_timer,
+    on_notifications,
     on_release_frequency,
     config,
 )
 
 print("Initializing app settings...")
 app_settings = pystray.Menu(
+    pystray.MenuItem(
+        "Disable notifications",
+        on_notifications,
+        checked=lambda item: config.disable_notifications == True,
+    ),
+    pystray.MenuItem(
+        "Automatic updates",
+        on_auto_updates,
+        checked=lambda item: config.automatic_updates == True,
+    ),
     pystray.MenuItem(
         "Change timeout",
         pystray.Menu(
