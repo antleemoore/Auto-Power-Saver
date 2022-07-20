@@ -8,10 +8,12 @@ from menu.menu_app_settings import app_settings
 from menu.menu_power_settings import power_settings
 from menu.menu_additional_features import additional_features
 
+print("Initializing menu icon...")
 image = PIL.Image.open(resource_path("resources/images/green_power.jpeg"))
 activeplan = "High performance" if get_ac_status().ACLineStatus == 1 else "Power saver"
 app_version, update_version = get_app_update_versions()
 update = check_for_updates(config)
+print()
 
 icon = pystray.Icon(
     "Auto Power Saver",

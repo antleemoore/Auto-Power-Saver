@@ -6,6 +6,7 @@ from menu.menu_handlers import (
     config,
 )
 
+print("Initializing app settings...")
 app_settings = pystray.Menu(
     pystray.MenuItem(
         "Change timeout",

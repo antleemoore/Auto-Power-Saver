@@ -3,6 +3,7 @@ from menu.menu_handlers import on_delete, on_install, on_win_power_settings
 
 from system.power_plan import get_plans
 
+print("Initializing power settings...")
 power_settings = pystray.Menu(
     pystray.MenuItem(
         "Create power plan",

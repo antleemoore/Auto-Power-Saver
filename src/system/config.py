@@ -3,6 +3,7 @@ import configparser
 
 class Config:
     def __init__(self, config_path):
+        print("Initializing config...")
         self.config_path = config_path
         self.parser = configparser.ConfigParser()
         self.parser.read(config_path)
@@ -20,6 +21,7 @@ class Config:
             self.default_values()
 
     def write_to_config(self):
+        print("Writing config to file...")
         try:
             self.parser.set("main", "timeout", str(self.timeout) if str(self.timeout).isdigit() else "3")
             self.parser.set(
@@ -41,6 +43,7 @@ class Config:
             self.parser.write(f)
 
     def default_values(self):
+        print("Setting config to default values...")
         if not self.parser.has_section("main"):
             self.parser.add_section("main")
         self.parser.set("main", "timeout", "3")

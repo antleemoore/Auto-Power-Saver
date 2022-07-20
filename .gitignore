@@ -16,3 +16,4 @@ test_strategy.txt
 search_results.txt
 resources/configs/v3_pyinstaller_config.json
 *.exe
+.vscode/c_cpp_properties.json

@@ -46,8 +46,10 @@ def get_idle_duration():
 
 def get_sys_folder(folder):
     if folder == "TEMP":
+        print("Getting temp folder {}".format(tempfile.gettempdir()))
         return tempfile.gettempdir()
     elif folder == "HOME":
+        print("Getting home folder {}".format(expanduser("~")))
         return expanduser("~")
     else:
         return None
@@ -58,13 +60,15 @@ def resource_path(relative_path):
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
-
+    print("Generating file path for " + relative_path)
     return os.path.join(base_path, relative_path)
 
 
 def get_powershell_path():
+    print("Powershell: " + "%SystemRoot%\\System32\\WindowsPowerShell\\v1.0\\powershell.exe")
     return "%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe"
 
 
 def is_admin():
+    print("Checking if user is admin...")
     return ctypes.windll.shell32.IsUserAnAdmin() != 0
