@@ -58,9 +58,13 @@ def resource_path(relative_path):
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath(".")
-
     return os.path.join(base_path, relative_path)
 
 
 def get_powershell_path():
     return "%SystemRoot%\system32\WindowsPowerShell\\v1.0\powershell.exe"
+
+
+def is_admin():
+    print("Checking if user is admin...")
+    return ctypes.windll.shell32.IsUserAnAdmin() != 0
