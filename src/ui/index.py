@@ -48,7 +48,7 @@ def open_window(icon, item):
         onvalue=True,
         offvalue=False,
         variable=config.disable_notifications,
-        command=lambda: update(icon, item=None, setting="Disable notifications"),
+        command=lambda: update(icon, setting="Disable notifications"),
     )
     disable_notifications.select() if config.disable_notifications else disable_notifications.deselect()
 
@@ -58,7 +58,7 @@ def open_window(icon, item):
         onvalue=True,
         offvalue=False,
         variable=config.automatic_updates,
-        command=lambda: update(icon, item=None, setting="Automatic updates"),
+        command=lambda: update(icon, setting="Automatic updates"),
     )
     automatic_updates.select() if config.automatic_updates else automatic_updates.deselect()
 
