@@ -15,8 +15,11 @@ from menu.menu_handlers import (
 )
 from system.system import resource_path
 
+window = None
+
 
 def update(icon, item, setting):
+    global window
     if setting == "Disable notifications":
         on_notifications(icon, None)
     elif setting == "Automatic updates":
@@ -25,6 +28,10 @@ def update(icon, item, setting):
         on_change_timer(icon, item)
     elif setting == "Change update frequency":
         on_release_frequency(icon, item)
+    elif setting == "Run deep file search":
+        window.destroy()
+        menu_item_run_search()
+        open_window(icon, None)
 
 
 def close_application(window, icon):
@@ -34,6 +41,7 @@ def close_application(window, icon):
 
 # function to open a tkinter window
 def open_window(icon, item):
+    global window
     # set window
     window = tix.Tk()
     window.title("Auto Power Saver")
@@ -120,7 +128,7 @@ def open_window(icon, item):
     deep_file_search_button = tk.Button(
         window,
         text="Run deep file search",
-        command=lambda: menu_item_run_search(),
+        command=lambda: update(None, None, setting="Run deep file search"),
     )
     exit_button = tk.Button(
         window,
