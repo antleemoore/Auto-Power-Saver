@@ -75,7 +75,7 @@ def on_change_timer(icon, item):
     global config
     choice = int(re.search(r"\d+", str(item)).group())
     config.timeout = choice
-    print("Chaning timeout to " + str(choice))
+    print("Changing timeout to " + str(choice))
     config.write_to_config()
     send_notification(
         f"The timeout length was changed to {int(config.timeout)} minutes.",
