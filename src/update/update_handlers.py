@@ -9,7 +9,7 @@ def handle_update_frequency(name, config):
         config.update_frequency = 1
     elif name == "Minor releases":
         config.update_frequency = 2
-    elif name == "Bug fixes":
+    else:
         config.update_frequency = 3
 
     print("Changing update frequency to " + name)
