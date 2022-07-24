@@ -44,5 +44,5 @@ def install_power_plan(name, config):
         "get_high_performance_power_plan.bat" if name == "High performance" else "get_power_saver_power_plan.bat"
     )
     print("Calling install power plan in Windows...")
-    subprocess.call(f"{resource_path('resources/plans/' + chosen_power_plan)}", shell=True)
+    subprocess.call(f"{resource_path('resources/batch/' + chosen_power_plan)}", shell=True)
     send_notification("The selected power plan has been downloaded.", config=config)
