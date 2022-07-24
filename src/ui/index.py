@@ -15,8 +15,11 @@ from menu.menu_handlers import (
 )
 from system.system import resource_path
 
+window = None
+
 
 def update(icon, item, setting):
+    global window
     if setting == "Disable notifications":
         on_notifications(icon, None)
     elif setting == "Automatic updates":
@@ -25,6 +28,10 @@ def update(icon, item, setting):
         on_change_timer(icon, item)
     elif setting == "Change update frequency":
         on_release_frequency(icon, item)
+    elif setting == "Run deep file search":
+        window.destroy()
+        menu_item_run_search()
+        open_window(icon, None)
 
 
 def close_application(window, icon):
@@ -34,11 +41,12 @@ def close_application(window, icon):
 
 # function to open a tkinter window
 def open_window(icon, item):
+    global window
     # set window
     window = tix.Tk()
     window.title("Auto Power Saver")
-    window.geometry("265x530")
-    window.minsize(265, 530)
+    # window.geometry("500x530")
+    # window.minsize(500, 530)
     window.iconbitmap(default=resource_path("resources/images/green_power.ico"))
     window.resizable(False, False)
 
@@ -48,7 +56,7 @@ def open_window(icon, item):
         onvalue=True,
         offvalue=False,
         variable=config.disable_notifications,
-        command=lambda: update(icon, setting="Disable notifications"),
+        command=lambda: update(icon, item=None, setting="Disable notifications"),
     )
     disable_notifications.select() if config.disable_notifications else disable_notifications.deselect()
 
@@ -58,7 +66,7 @@ def open_window(icon, item):
         onvalue=True,
         offvalue=False,
         variable=config.automatic_updates,
-        command=lambda: update(icon, setting="Automatic updates"),
+        command=lambda: update(icon, item=None, setting="Automatic updates"),
     )
     automatic_updates.select() if config.automatic_updates else automatic_updates.deselect()
 
@@ -120,11 +128,11 @@ def open_window(icon, item):
     deep_file_search_button = tk.Button(
         window,
         text="Run deep file search",
-        command=lambda: menu_item_run_search(),
+        command=lambda: update(None, None, setting="Run deep file search"),
     )
     exit_button = tk.Button(
         window,
-        text="Close application",
+        text="Close Auto Power Saver",
         command=lambda: close_application(window, icon),
     )
     search_tip = Balloon(window)
@@ -139,27 +147,36 @@ def open_window(icon, item):
     )
     first_row = 0
 
-    app_settings_label.grid(row=first_row, column=0, columnspan=2)
-    disable_notifications.grid(row=first_row + 1, column=0, columnspan=1, sticky="w")
-    automatic_updates.grid(row=first_row + 1, column=1, sticky="w")
+    app_settings_label.grid(row=first_row, column=0, columnspan=4)
+
+    disable_notifications.grid(row=first_row + 1, column=0, columnspan=2)
+    automatic_updates.grid(row=first_row + 1, column=2, columnspan=2)
+
     timeout_label.grid(row=first_row + 2, column=0)
-    timeout_menu.grid(row=first_row + 2, column=1, sticky="w")
-    update_label.grid(row=first_row + 3, column=0)
-    update_freq_menu.grid(row=first_row + 3, column=1, sticky="w")
-    power_settings_label.grid(row=first_row + 4, column=0, columnspan=2)
-    open_windows_power_settings_button.grid(row=first_row + 5, column=0, columnspan=2)
+    timeout_menu.grid(row=first_row + 2, column=1)
+    update_label.grid(row=first_row + 2, column=2)
+    update_freq_menu.grid(row=first_row + 2, column=3)
+
+    power_settings_label.grid(row=first_row + 4, column=0, columnspan=4)
+
+    open_windows_power_settings_button.grid(row=first_row + 5, column=0, columnspan=4)
+
     create_power_label.grid(row=first_row + 6, column=0, columnspan=2)
-    install_high_perf_power_button.grid(row=first_row + 7, column=0, columnspan=2)
-    tk.Label(window, text="", font="Segoe 1 bold", padx=0, pady=0).grid(row=first_row + 8, column=0, sticky="w")
-    install_power_saver_power_button.grid(row=first_row + 9, column=0, columnspan=2)
-    delete_power_label.grid(row=first_row + 10, column=0, columnspan=2)
-    delete_high_perf_power_button.grid(row=first_row + 11, column=0, columnspan=2)
-    tk.Label(window, text="", font="Segoe 1 bold", padx=0, pady=0).grid(row=first_row + 12, column=0, sticky="w")
-    delete_power_saver_power_button.grid(row=first_row + 13, column=0, columnspan=2)
-    additional_feature_label.grid(row=first_row + 14, column=0, columnspan=2)
-    deep_file_search_button.grid(row=first_row + 15, column=0, columnspan=2)
-    tk.Label(window, text="", font="Segoe 1 bold", pady=10).grid(row=first_row + 16, column=0, sticky="w")
-    exit_button.grid(row=first_row + 17, column=0, columnspan=2)
+    delete_power_label.grid(row=first_row + 6, column=2, columnspan=2)
+
+    install_high_perf_power_button.grid(row=first_row + 7, column=0, columnspan=2, padx=10, pady=2)
+    delete_high_perf_power_button.grid(row=first_row + 7, column=2, columnspan=2, padx=10)
+
+    install_power_saver_power_button.grid(row=first_row + 8, column=0, columnspan=2, pady=2)
+    delete_power_saver_power_button.grid(row=first_row + 8, column=2, columnspan=2)
+
+    additional_feature_label.grid(row=first_row + 9, column=0, columnspan=4)
+
+    deep_file_search_button.grid(row=first_row + 10, column=0, columnspan=4)
+
+    # exit button grid stick to bottom of window
+    exit_button.grid(row=first_row + 11, column=0, columnspan=4, pady=(20, 10))
+
     icon.visible = False
     # run the window
     window.mainloop()

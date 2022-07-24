@@ -1,1 +1,2 @@
-powercfg /import "%cd%\power_saver.pow"
+set "newDir=%~dp0\..\plans\"
+powercfg /import "%newDir%\power_saver.pow"

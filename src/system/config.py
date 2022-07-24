@@ -41,6 +41,7 @@ class Config:
             self.default_values()
         with open(self.config_path, "w") as f:
             self.parser.write(f)
+        print("Config file updated")
 
     def default_values(self):
         print("Setting config to default values...")
