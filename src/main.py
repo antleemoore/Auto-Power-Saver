@@ -5,6 +5,7 @@ from tkinter import *
 import tkinter
 from system.power_plan import set_plan
 from system.system import get_ac_status, get_idle_duration, is_admin
+from ui.index import open_window
 from update.update import check_for_updates
 from menu.menu_icon import icon, activeplan, update
 from menu.menu_handlers import config, check_quit_status

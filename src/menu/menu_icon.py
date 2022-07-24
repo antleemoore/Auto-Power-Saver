@@ -22,7 +22,7 @@ icon = pystray.Icon(
     image,
     title="Auto Power Saver",
     menu=pystray.Menu(
-        pystray.MenuItem(f"Version: {app_version}", open_window, default=True, enabled=False),
+        pystray.MenuItem(f"Version: {app_version}", open_window, default=True),
         pystray.MenuItem(f"Current power plan: {activeplan}", on_check_updates, enabled=False),
         pystray.MenuItem("Update now", on_check_updates, visible=lambda item: update == True),
         pystray.MenuItem("Power plan settings", power_settings),

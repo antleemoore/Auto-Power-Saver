@@ -57,7 +57,7 @@ def check_for_updates(config):
     if semver.compare(update_version, app_version) == 1:
         if config.update_frequency == 1 and new_major <= current_major:
             return
-        elif config.update_frequency == 2 and new_major >= current_major and new_minor <= current_minor:
+        elif config.update_frequency == 2 and new_major >= current_major and new_minor < current_minor:
             return
         else:
             pass

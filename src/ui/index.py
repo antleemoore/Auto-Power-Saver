@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Toplevel, tix
+from tkinter import tix
 from tkinter.tix import Balloon
 from system.file_search import menu_item_run_search
 from menu.menu_handlers import (

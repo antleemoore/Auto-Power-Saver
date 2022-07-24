@@ -30,7 +30,9 @@ def menu_item_run_search():
     # tkinter se
     print("Getting drive data from user...")
     drive = simpledialog.askstring("File Search", "Which drive do you want to search?\n\n Example: C")
-    if not drive or drive not in get_drives():
+    if not drive:
+        return
+    if drive not in get_drives():
         tkinter.messagebox.showinfo("File Search", "You need to enter a valid drive letter.")
         return
     print(f"Selected drive: {drive}")
